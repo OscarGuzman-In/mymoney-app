@@ -1,0 +1,28 @@
+# compiled output
+/dist
+/build
+
+# dependencies
+/node_modules
+
+# tests
+/coverage
+
+# environment
+.env
+.env.*
+!.env.example
+
+# generated prisma client
+/src/generated
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# misc
+.DS_Store
+.idea/
+.vscode/
+*.tsbuildinfo
