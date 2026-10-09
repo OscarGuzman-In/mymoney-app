@@ -1,0 +1,40 @@
+<header class="app-header">
+  <div class="container app-header__inner">
+    <a
+      class="app-header__brand"
+      [routerLink]="isAuthenticated() ? '/app' : '/'"
+      aria-label="MyMoney, ir al inicio"
+    >
+      <span class="app-header__mark" aria-hidden="true">M</span>
+      <span class="app-header__name">{{ brand }}</span>
+    </a>
+
+    @if (!isAuthenticated()) {
+      <nav class="app-header__nav" aria-label="Navegación principal">
+        @for (item of navItems; track item.href) {
+          <a class="app-header__link" [href]="item.href">{{ item.label }}</a>
+        }
+      </nav>
+    }
+
+    @if (isAuthenticated()) {
+      <div class="app-header__actions">
+        <span class="app-header__user">{{ user()?.email }}</span>
+        <button
+          class="btn btn-ghost app-header__cta"
+          type="button"
+          (click)="logout()"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+    } @else {
+      <div class="app-header__actions">
+        <a class="app-header__link" routerLink="/login">Iniciar sesión</a>
+        <a class="btn btn-primary app-header__cta" routerLink="/register">
+          Crear cuenta
+        </a>
+      </div>
+    }
+  </div>
+</header>

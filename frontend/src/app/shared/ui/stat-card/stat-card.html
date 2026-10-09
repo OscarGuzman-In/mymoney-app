@@ -1,0 +1,15 @@
+<article class="stat-card">
+  <header class="stat-card__header">
+    <span class="stat-card__label">{{ label() }}</span>
+    @if (hint()) {
+      <span class="stat-card__hint">{{ hint() }}</span>
+    }
+  </header>
+  <p
+    class="stat-card__value"
+    [class.stat-card__value--positive]="trend() === 'positive'"
+    [class.stat-card__value--negative]="trend() === 'negative'"
+  >
+    {{ value() }}
+  </p>
+</article>

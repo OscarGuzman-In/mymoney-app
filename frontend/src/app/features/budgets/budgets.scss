@@ -1,0 +1,75 @@
+.budgets__form {
+  margin-bottom: var(--space-5);
+}
+
+.budgets__fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+
+  legend {
+    padding-inline: var(--space-2);
+  }
+}
+
+.budgets__draft {
+  display: grid;
+  gap: var(--space-2);
+  align-items: center;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 10rem auto;
+  }
+}
+
+.budget-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.budget-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.budget-card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.budget-card__amount {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-card__dates {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.budget-card__categories {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-1);
+  }
+}
+
+.budget-card__footer {
+  margin-top: auto;
+}

@@ -1,0 +1,230 @@
+<app-page-header
+  eyebrow="Planificación"
+  title="Presupuestos"
+  subtitle="Define límites de gasto por periodo y moneda."
+>
+  <button class="btn btn-primary" type="button" (click)="openCreate()">
+    Nuevo presupuesto
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (formOpen()) {
+  <section class="panel budgets__form" aria-labelledby="budget-form-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="budget-form-title">
+        {{ editingId() ? 'Editar presupuesto' : 'Nuevo presupuesto' }}
+      </h2>
+    </header>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <p class="alert alert--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="name"
+            maxlength="100"
+            [attr.aria-invalid]="name.invalid && name.touched"
+          />
+          @if (name.invalid && name.touched) {
+            <p class="field__error">El nombre es obligatorio (máx. 100).</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Moneda</span>
+          <select
+            class="field__select"
+            formControlName="currency_id"
+            [attr.aria-invalid]="currencyId.invalid && currencyId.touched"
+          >
+            <option value="">Selecciona una moneda</option>
+            @for (currency of currencies(); track currency.id) {
+              <option [value]="currency.id">
+                {{ currency.code }} · {{ currency.name }}
+              </option>
+            }
+          </select>
+          @if (currencyId.invalid && currencyId.touched) {
+            <p class="field__error">Selecciona una moneda.</p>
+          }
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Monto total</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="amount"
+            [attr.aria-invalid]="amount.invalid && amount.touched"
+          />
+          @if (amount.invalid && amount.touched) {
+            <p class="field__error">Ingresa un monto mayor que cero.</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Estado</span>
+          <select class="field__select" formControlName="status">
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Inicio</span>
+          <input class="field__input" type="date" formControlName="start_date" />
+        </label>
+        <label class="field">
+          <span class="field__label">Fin</span>
+          <input class="field__input" type="date" formControlName="end_date" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Descripción (opcional)</span>
+        <input
+          class="field__input"
+          type="text"
+          formControlName="description"
+          maxlength="500"
+        />
+      </label>
+
+      <fieldset class="budgets__fieldset">
+        <legend class="field__label">Categorías del presupuesto</legend>
+        @for (draft of categoryDrafts(); track $index) {
+          <div class="budgets__draft">
+            <select
+              class="field__select"
+              [ngModel]="draft.category_id"
+              (ngModelChange)="updateDraft($index, 'category_id', $event)"
+              [ngModelOptions]="{ standalone: true }"
+              aria-label="Categoría"
+            >
+              <option value="">Selecciona una categoría</option>
+              @for (category of expenseCategories(); track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select>
+            <input
+              class="field__input"
+              type="number"
+              min="0.01"
+              step="0.01"
+              [ngModel]="draft.amount"
+              (ngModelChange)="updateDraft($index, 'amount', $event)"
+              [ngModelOptions]="{ standalone: true }"
+              aria-label="Monto de la categoría"
+            />
+            <button
+              class="btn btn-ghost"
+              type="button"
+              (click)="removeCategoryDraft($index)"
+            >
+              Quitar
+            </button>
+          </div>
+        }
+        <button class="btn btn-ghost" type="button" (click)="addCategoryDraft()">
+          Añadir categoría
+        </button>
+      </fieldset>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ editingId() ? 'Guardar cambios' : 'Crear presupuesto' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando presupuestos…</span>
+  </div>
+}
+
+@if (!loading() && budgets().length) {
+  <div class="panel-grid panel-grid--three">
+    @for (budget of budgets(); track budget.id) {
+      <article class="panel budget-card">
+        <header class="budget-card__header">
+          <h2 class="budget-card__title">{{ budget.name }}</h2>
+          <app-badge
+            [label]="statusLabels[budget.status]"
+            [tone]="statusTone(budget.status)"
+          />
+        </header>
+        <p class="budget-card__amount">
+          {{ formatMoney(budget.amount, currencyOf(budget) ?? null) }}
+        </p>
+        <p class="muted budget-card__dates">
+          {{ formatDate(budget.start_date) }} – {{ formatDate(budget.end_date) }}
+        </p>
+        @if (budget.description) {
+          <p class="muted">{{ budget.description }}</p>
+        }
+        @if (budget.budget_categories.length) {
+          <ul class="budget-card__categories">
+            @for (item of budget.budget_categories; track item.id) {
+              <li>
+                <span>{{ categoryName(item.category_id) }}</span>
+                <span>{{ formatMoney(item.amount, currencyOf(budget) ?? null) }}</span>
+              </li>
+            }
+          </ul>
+        }
+        <footer class="inline-actions budget-card__footer">
+          <button class="btn btn-ghost" type="button" (click)="openEdit(budget)">
+            Editar
+          </button>
+          @if (budget.is_active) {
+            <button
+              class="btn btn-ghost"
+              type="button"
+              (click)="deactivate(budget)"
+            >
+              Desactivar
+            </button>
+          }
+        </footer>
+      </article>
+    }
+  </div>
+}
+
+@if (!loading() && !budgets().length && !error()) {
+  <app-empty-state
+    title="Sin presupuestos"
+    message="Crea un presupuesto para controlar tus límites de gasto."
+  >
+    <button class="btn btn-primary" type="button" (click)="openCreate()">
+      Crear presupuesto
+    </button>
+  </app-empty-state>
+}

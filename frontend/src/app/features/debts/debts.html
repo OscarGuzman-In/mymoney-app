@@ -1,0 +1,263 @@
+<app-page-header
+  eyebrow="Compromisos"
+  title="Deudas"
+  subtitle="Registra tus deudas y controla los pagos hasta saldarlas."
+>
+  <button class="btn btn-primary" type="button" (click)="openCreate()">
+    Nueva deuda
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (formOpen()) {
+  <section class="panel debts__form" aria-labelledby="debt-form-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="debt-form-title">
+        {{ editingId() ? 'Editar deuda' : 'Nueva deuda' }}
+      </h2>
+    </header>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <p class="alert alert--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="name"
+            maxlength="100"
+            [attr.aria-invalid]="name.invalid && name.touched"
+          />
+          @if (name.invalid && name.touched) {
+            <p class="field__error">El nombre es obligatorio (máx. 100).</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Moneda</span>
+          <select
+            class="field__select"
+            formControlName="currency_id"
+            [attr.aria-invalid]="currencyId.invalid && currencyId.touched"
+          >
+            <option value="">Selecciona una moneda</option>
+            @for (currency of currencies(); track currency.id) {
+              <option [value]="currency.id">
+                {{ currency.code }} · {{ currency.name }}
+              </option>
+            }
+          </select>
+          @if (currencyId.invalid && currencyId.touched) {
+            <p class="field__error">Selecciona una moneda.</p>
+          }
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Monto original</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="original_amount"
+            [attr.aria-invalid]="originalAmount.invalid && originalAmount.touched"
+          />
+          @if (originalAmount.invalid && originalAmount.touched) {
+            <p class="field__error">Ingresa un monto mayor que cero.</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Saldo pendiente</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0"
+            step="0.01"
+            formControlName="remaining_amount"
+          />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Fecha de vencimiento</span>
+          <input class="field__input" type="date" formControlName="due_date" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Estado</span>
+          <select class="field__select" formControlName="status">
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Descripción (opcional)</span>
+        <input
+          class="field__input"
+          type="text"
+          formControlName="description"
+          maxlength="500"
+        />
+      </label>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ editingId() ? 'Guardar cambios' : 'Crear deuda' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando deudas…</span>
+  </div>
+}
+
+@if (!loading() && debts().length) {
+  <div class="panel-grid">
+    @for (debt of debts(); track debt.id) {
+      <article class="panel debt-card">
+        <header class="debt-card__header">
+          <h2 class="debt-card__title">{{ debt.name }}</h2>
+          <app-badge
+            [label]="statusLabels[debt.status]"
+            [tone]="statusTone(debt.status)"
+          />
+        </header>
+
+        <p class="debt-card__amounts">
+          <strong>
+            {{ formatMoney(debt.remaining_amount, currencyOf(debt) ?? null) }}
+          </strong>
+          <span class="muted">
+            pendiente de
+            {{ formatMoney(debt.original_amount, currencyOf(debt) ?? null) }}
+          </span>
+        </p>
+
+        <div
+          class="progress"
+          role="progressbar"
+          [attr.aria-valuenow]="paidPercent(debt)"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span class="progress__fill" [style.width.%]="paidPercent(debt)"></span>
+        </div>
+
+        <p class="muted debt-card__date">
+          Vence: {{ formatDate(debt.due_date) }}
+        </p>
+
+        <footer class="inline-actions debt-card__footer">
+          <button
+            class="btn btn-ghost"
+            type="button"
+            (click)="togglePayments(debt)"
+          >
+            {{ selectedDebtId() === debt.id ? 'Ocultar pagos' : 'Pagos' }}
+          </button>
+          <button class="btn btn-ghost" type="button" (click)="openEdit(debt)">
+            Editar
+          </button>
+          @if (debt.is_active) {
+            <button
+              class="btn btn-ghost"
+              type="button"
+              (click)="deactivate(debt)"
+            >
+              Desactivar
+            </button>
+          }
+        </footer>
+
+        @if (selectedDebtId() === debt.id) {
+          <section class="debt-card__payments" aria-label="Pagos de la deuda">
+            <form
+              class="debt-card__payment-form"
+              [formGroup]="paymentForm"
+              (ngSubmit)="addPayment(debt)"
+              novalidate
+            >
+              @if (paymentError()) {
+                <p class="alert alert--error" role="alert">
+                  {{ paymentError() }}
+                </p>
+              }
+              <label class="field">
+                <span class="field__label">Monto del pago</span>
+                <input
+                  class="field__input"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  formControlName="amount"
+                />
+              </label>
+              <label class="field">
+                <span class="field__label">Fecha</span>
+                <input
+                  class="field__input"
+                  type="date"
+                  formControlName="payment_date"
+                />
+              </label>
+              <button class="btn btn-primary" type="submit" [disabled]="paying()">
+                Registrar pago
+              </button>
+            </form>
+
+            @if (payments().length) {
+              <ul class="debt-card__payment-list">
+                @for (payment of payments(); track payment.id) {
+                  <li>
+                    <span>{{ formatDate(payment.payment_date) }}</span>
+                    <span>
+                      {{ formatMoney(payment.amount, currencyOf(debt) ?? null) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="muted">Aún no hay pagos registrados.</p>
+            }
+          </section>
+        }
+      </article>
+    }
+  </div>
+}
+
+@if (!loading() && !debts().length && !error()) {
+  <app-empty-state
+    title="Sin deudas registradas"
+    message="Registra tus deudas para llevar el control de tus pagos."
+  >
+    <button class="btn btn-primary" type="button" (click)="openCreate()">
+      Crear deuda
+    </button>
+  </app-empty-state>
+}

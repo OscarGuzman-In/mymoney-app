@@ -1,0 +1,38 @@
+<section class="app-section">
+  <div class="container">
+    <header class="app-section__header">
+      <div>
+        <p class="app-section__eyebrow">Área privada</p>
+        <h1 class="app-section__title">
+          Hola, {{ user()?.first_name || user()?.email }}
+        </h1>
+        <p class="app-section__subtitle">
+          Tu sesión está activa. El panel financiero completo se construirá en el
+          siguiente sprint.
+        </p>
+      </div>
+      <button class="btn btn-ghost" type="button" (click)="logout()">
+        Cerrar sesión
+      </button>
+    </header>
+
+    <div class="placeholder-grid">
+      <article class="placeholder">
+        <h2 class="placeholder__title">Cuentas y saldos</h2>
+        <p class="placeholder__text">Próximamente</p>
+      </article>
+      <article class="placeholder">
+        <h2 class="placeholder__title">Movimientos</h2>
+        <p class="placeholder__text">Próximamente</p>
+      </article>
+      <article class="placeholder">
+        <h2 class="placeholder__title">Presupuestos</h2>
+        <p class="placeholder__text">Próximamente</p>
+      </article>
+      <article class="placeholder">
+        <h2 class="placeholder__title">Metas de ahorro</h2>
+        <p class="placeholder__text">Próximamente</p>
+      </article>
+    </div>
+  </div>
+</section>

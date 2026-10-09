@@ -1,0 +1,119 @@
+<app-page-header
+  eyebrow="Cuenta"
+  title="Perfil"
+  subtitle="Actualiza tus datos personales y tu contraseña."
+/>
+
+<div class="panel-grid">
+  <section class="panel" aria-labelledby="profile-data-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="profile-data-title">Datos personales</h2>
+    </header>
+
+    <dl class="profile__meta">
+      <div>
+        <dt>Correo electrónico</dt>
+        <dd>{{ user()?.email }}</dd>
+      </div>
+      <div>
+        <dt>Miembro desde</dt>
+        <dd>{{ user() ? formatDate(user()!.created_at) : '—' }}</dd>
+      </div>
+    </dl>
+
+    <hr class="divider" />
+
+    <form class="form" [formGroup]="profileForm" (ngSubmit)="submitProfile()" novalidate>
+      @if (profileError()) {
+        <p class="alert alert--error" role="alert">{{ profileError() }}</p>
+      }
+      @if (profileSuccess()) {
+        <p class="alert alert--success" role="status">{{ profileSuccess() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="first_name"
+            maxlength="100"
+          />
+        </label>
+        <label class="field">
+          <span class="field__label">Apellido</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="last_name"
+            maxlength="100"
+          />
+        </label>
+      </div>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="savingProfile()">
+          @if (savingProfile()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          Guardar datos
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="profile-password-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="profile-password-title">Seguridad</h2>
+    </header>
+
+    <form class="form" [formGroup]="passwordForm" (ngSubmit)="submitPassword()" novalidate>
+      @if (passwordError()) {
+        <p class="alert alert--error" role="alert">{{ passwordError() }}</p>
+      }
+      @if (passwordSuccess()) {
+        <p class="alert alert--success" role="status">{{ passwordSuccess() }}</p>
+      }
+
+      <label class="field">
+        <span class="field__label">Contraseña actual</span>
+        <input
+          class="field__input"
+          type="password"
+          formControlName="current_password"
+          autocomplete="current-password"
+          [attr.aria-invalid]="currentPassword.invalid && currentPassword.touched"
+        />
+        @if (currentPassword.invalid && currentPassword.touched) {
+          <p class="field__error">Ingresa tu contraseña actual.</p>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Nueva contraseña</span>
+        <input
+          class="field__input"
+          type="password"
+          formControlName="new_password"
+          autocomplete="new-password"
+          [attr.aria-invalid]="newPassword.invalid && newPassword.touched"
+        />
+        @if (newPassword.invalid && newPassword.touched) {
+          <p class="field__error">
+            La contraseña debe tener entre 8 y 72 caracteres.
+          </p>
+        }
+      </label>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="savingPassword()">
+          @if (savingPassword()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          Cambiar contraseña
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

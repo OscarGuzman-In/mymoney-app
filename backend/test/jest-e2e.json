@@ -10,6 +10,6 @@
     "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": { "allowJs": true } }]
   },
   "transformIgnorePatterns": [
-    "^(?!.*@nestjs[+\\\\/]config).*(?:node_modules|\\.pnpm).*$"
+    "^(?!.*@nestjs[+\\\\/](?:config|jwt|passport)).*(?:node_modules|\\.pnpm).*$"
   ]
 }
