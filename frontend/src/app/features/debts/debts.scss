@@ -1,0 +1,86 @@
+.debts__form {
+  margin-bottom: var(--space-5);
+}
+
+.debt-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.debt-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.debt-card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.debt-card__amounts {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.debt-card__date {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.progress {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  transition: width var(--transition-base);
+}
+
+.debt-card__footer {
+  margin-top: var(--space-1);
+}
+
+.debt-card__payments {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.debt-card__payment-form {
+  display: grid;
+  gap: var(--space-2);
+  align-items: end;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr auto;
+  }
+}
+
+.debt-card__payment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-1);
+  }
+}

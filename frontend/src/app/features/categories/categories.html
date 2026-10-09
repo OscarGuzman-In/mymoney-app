@@ -1,0 +1,191 @@
+<app-page-header
+  eyebrow="Organización"
+  title="Categorías"
+  subtitle="Clasifica tus ingresos y gastos. Las categorías del sistema no se pueden editar."
+>
+  <button class="btn btn-primary" type="button" (click)="openCreate()">
+    Nueva categoría
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (formOpen()) {
+  <section class="panel categories__form" aria-labelledby="category-form-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="category-form-title">
+        {{ editingId() ? 'Editar categoría' : 'Nueva categoría' }}
+      </h2>
+    </header>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <p class="alert alert--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="name"
+            maxlength="100"
+            [attr.aria-invalid]="name.invalid && name.touched"
+          />
+          @if (name.invalid && name.touched) {
+            <p class="field__error">El nombre es obligatorio (máx. 100).</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Tipo</span>
+          <select class="field__select" formControlName="type">
+            @for (type of types; track type) {
+              <option [value]="type">{{ typeLabels[type] }}</option>
+            }
+          </select>
+          @if (editingId()) {
+            <p class="field__hint">El tipo no se puede cambiar.</p>
+          }
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Color (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="color"
+            placeholder="#0f766e"
+            [attr.aria-invalid]="color.invalid && color.touched"
+          />
+          @if (color.invalid && color.touched) {
+            <p class="field__error">Usa el formato #RRGGBB.</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Icono (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="icon"
+            maxlength="50"
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Descripción (opcional)</span>
+        <input
+          class="field__input"
+          type="text"
+          formControlName="description"
+          maxlength="500"
+        />
+      </label>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ editingId() ? 'Guardar cambios' : 'Crear categoría' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando categorías…</span>
+  </div>
+}
+
+@if (!loading() && categories().length) {
+  <section class="panel" aria-label="Listado de categorías">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Categoría</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Origen</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (category of categories(); track category.id) {
+            <tr>
+              <td>
+                <span class="categories__dot-wrap">
+                  @if (category.color) {
+                    <span
+                      class="categories__dot"
+                      [style.background]="category.color"
+                      aria-hidden="true"
+                    ></span>
+                  }
+                  <strong>{{ category.name }}</strong>
+                </span>
+              </td>
+              <td>{{ typeLabels[category.type] }}</td>
+              <td>{{ isSystem(category) ? 'Sistema' : 'Propia' }}</td>
+              <td>
+                <app-badge
+                  [label]="category.is_active ? 'Activa' : 'Inactiva'"
+                  [tone]="category.is_active ? 'positive' : 'neutral'"
+                />
+              </td>
+              <td class="text-right">
+                @if (!isSystem(category)) {
+                  <div class="inline-actions categories__actions">
+                    <button
+                      class="btn btn-ghost"
+                      type="button"
+                      (click)="openEdit(category)"
+                    >
+                      Editar
+                    </button>
+                    @if (category.is_active) {
+                      <button
+                        class="btn btn-ghost"
+                        type="button"
+                        (click)="deactivate(category)"
+                      >
+                        Desactivar
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (!loading() && !categories().length && !error()) {
+  <app-empty-state
+    title="Sin categorías"
+    message="Crea categorías para clasificar tus movimientos."
+  >
+    <button class="btn btn-primary" type="button" (click)="openCreate()">
+      Crear categoría
+    </button>
+  </app-empty-state>
+}

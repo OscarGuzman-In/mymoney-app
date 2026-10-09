@@ -1,0 +1,277 @@
+<app-page-header
+  eyebrow="Actividad"
+  title="Movimientos"
+  subtitle="Registra ingresos, gastos y transferencias entre tus cuentas."
+>
+  <button class="btn btn-primary" type="button" (click)="openCreate()">
+    Nuevo movimiento
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (formOpen()) {
+  <section class="panel movements__form" aria-labelledby="movement-form-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="movement-form-title">
+        {{ editingId() ? 'Editar movimiento' : 'Nuevo movimiento' }}
+      </h2>
+    </header>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <p class="alert alert--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Tipo</span>
+          <select class="field__select" formControlName="type">
+            @for (type of types; track type) {
+              <option [value]="type">{{ typeLabels[type] }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Fecha</span>
+          <input class="field__input" type="date" formControlName="movement_date" />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">
+            {{ formType() === 'transfer' ? 'Cuenta origen' : 'Cuenta' }}
+          </span>
+          <select
+            class="field__select"
+            formControlName="account_id"
+            [attr.aria-invalid]="accountId.invalid && accountId.touched"
+          >
+            <option value="">Selecciona una cuenta</option>
+            @for (account of activeAccounts(); track account.id) {
+              <option [value]="account.id">
+                {{ account.name }} · {{ currencyById().get(account.currency_id)?.code }}
+              </option>
+            }
+          </select>
+          @if (accountId.invalid && accountId.touched) {
+            <p class="field__error">Selecciona una cuenta.</p>
+          }
+        </label>
+
+        @if (formType() === 'transfer') {
+          <label class="field">
+            <span class="field__label">Cuenta destino</span>
+            <select class="field__select" formControlName="transfer_account_id">
+              <option value="">Selecciona una cuenta</option>
+              @for (target of transferTargets(); track target.id) {
+                <option [value]="target.id">{{ target.name }}</option>
+              }
+            </select>
+            @if (!transferTargets().length) {
+              <p class="field__hint">
+                Se requieren al menos dos cuentas con la misma moneda.
+              </p>
+            }
+          </label>
+        } @else {
+          <label class="field">
+            <span class="field__label">Categoría (opcional)</span>
+            <select class="field__select" formControlName="category_id">
+              <option value="">Sin categoría</option>
+              @for (category of categoryOptions(); track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Monto</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="amount"
+            [attr.aria-invalid]="amount.invalid && amount.touched"
+          />
+          @if (amount.invalid && amount.touched) {
+            <p class="field__error">Ingresa un monto mayor que cero.</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Descripción (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="description"
+            maxlength="500"
+          />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Referencia (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="reference"
+            maxlength="100"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Notas (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="notes"
+            maxlength="1000"
+          />
+        </label>
+      </div>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ editingId() ? 'Guardar cambios' : 'Registrar movimiento' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+<section class="panel movements__filters" aria-label="Filtros de movimientos">
+  <form class="toolbar" [formGroup]="filters" (ngSubmit)="applyFilters()">
+    <label class="field">
+      <span class="field__label">Cuenta</span>
+      <select class="field__select" formControlName="account_id">
+        <option value="">Todas</option>
+        @for (account of accounts(); track account.id) {
+          <option [value]="account.id">{{ account.name }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label">Categoría</span>
+      <select class="field__select" formControlName="category_id">
+        <option value="">Todas</option>
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label">Tipo</span>
+      <select class="field__select" formControlName="type">
+        <option value="">Todos</option>
+        @for (type of types; track type) {
+          <option [value]="type">{{ typeLabels[type] }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label">Desde</span>
+      <input class="field__input" type="date" formControlName="start_date" />
+    </label>
+    <label class="field">
+      <span class="field__label">Hasta</span>
+      <input class="field__input" type="date" formControlName="end_date" />
+    </label>
+    <div class="inline-actions">
+      <button class="btn btn-primary" type="submit">Filtrar</button>
+      <button class="btn btn-ghost" type="button" (click)="clearFilters()">
+        Limpiar
+      </button>
+    </div>
+  </form>
+</section>
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando movimientos…</span>
+  </div>
+}
+
+@if (!loading() && movements().length) {
+  <section class="panel" aria-label="Listado de movimientos">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Fecha</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Cuenta</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Descripción</th>
+            <th scope="col" class="text-right">Monto</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (movement of movements(); track movement.id) {
+            <tr>
+              <td>{{ formatDate(movement.movement_date) }}</td>
+              <td>
+                <app-badge
+                  [label]="typeLabels[movement.type]"
+                  [tone]="movement.type === 'income' ? 'positive' : movement.type === 'expense' ? 'negative' : 'info'"
+                />
+              </td>
+              <td>
+                {{ accountById().get(movement.account_id)?.name ?? '—' }}
+                @if (movement.transfer_account_id) {
+                  <span class="muted">
+                    → {{ accountById().get(movement.transfer_account_id)?.name }}
+                  </span>
+                }
+              </td>
+              <td>{{ categoryName(movement) }}</td>
+              <td>{{ movement.description ?? '—' }}</td>
+              <td class="text-right">
+                <span [class]="'amount--' + amountTone(movement.type)">
+                  {{ formatMoney(movement.amount, currencyOf(movement) ?? null) }}
+                </span>
+              </td>
+              <td class="text-right">
+                <button
+                  class="btn btn-ghost"
+                  type="button"
+                  (click)="openEdit(movement)"
+                >
+                  Editar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (!loading() && !movements().length && !error()) {
+  <app-empty-state
+    title="Sin movimientos"
+    message="Registra tu primer ingreso o gasto para verlo aquí."
+  >
+    <button class="btn btn-primary" type="button" (click)="openCreate()">
+      Nuevo movimiento
+    </button>
+  </app-empty-state>
+}

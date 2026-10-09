@@ -1,0 +1,225 @@
+<app-page-header
+  eyebrow="Panel financiero"
+  title="Resumen"
+  [subtitle]="'Consulta el estado de tus finanzas para ' + monthLabel(selected()) + '.'"
+>
+  <label class="field dashboard__period">
+    <span class="field__label">Periodo</span>
+    <select
+      class="field__select"
+      [ngModel]="periodValue(selected())"
+      (ngModelChange)="onPeriodChange($event)"
+      name="period"
+    >
+      @for (period of periods; track periodValue(period)) {
+        <option [value]="periodValue(period)">{{ monthLabel(period) }}</option>
+      }
+    </select>
+  </label>
+</app-page-header>
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando información…</span>
+  </div>
+}
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (summary(); as data) {
+  <div class="stat-grid">
+    <app-stat-card
+      label="Cuentas activas"
+      [value]="data.active_accounts_count.toString()"
+      hint="Disponibles"
+    />
+    <app-stat-card
+      label="Presupuestos activos"
+      [value]="data.active_budgets_count.toString()"
+      hint="En curso"
+    />
+    <app-stat-card
+      label="Metas activas"
+      [value]="data.active_savings_goals_count.toString()"
+      hint="De ahorro"
+    />
+    <app-stat-card
+      label="Monedas en uso"
+      [value]="data.balances_by_currency.length.toString()"
+      hint="Con saldo"
+    />
+  </div>
+
+  <div class="panel-grid dashboard__panels">
+    <section class="panel" aria-labelledby="balances-title">
+      <header class="panel__header">
+        <h2 class="panel__title" id="balances-title">Saldo por moneda</h2>
+      </header>
+      @if (data.balances_by_currency.length) {
+        <ul class="currency-list">
+          @for (balance of data.balances_by_currency; track balance.currency_id) {
+            <li class="currency-list__item">
+              <span class="currency-list__label">
+                {{ balance.currency_code ?? 'N/D' }}
+              </span>
+              <span class="currency-list__value">
+                {{ money(balance.total, balance.symbol, balance.currency_code) }}
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Aún no tienes saldos registrados.</p>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="totals-title">
+      <header class="panel__header">
+        <h2 class="panel__title" id="totals-title">Ingresos y gastos</h2>
+      </header>
+      @if (data.totals_by_currency.length) {
+        <ul class="currency-list">
+          @for (total of data.totals_by_currency; track total.currency_id) {
+            <li class="currency-list__item currency-list__item--stacked">
+              <span class="currency-list__label">
+                {{ total.currency_code ?? 'N/D' }}
+              </span>
+              <span class="currency-list__row">
+                <span class="amount--positive">
+                  +{{ money(total.income, total.symbol, total.currency_code) }}
+                </span>
+                <span class="amount--negative">
+                  −{{ money(total.expenses, total.symbol, total.currency_code) }}
+                </span>
+                <strong
+                  [class]="'amount--' + amountTone(total.net)"
+                >{{ money(total.net, total.symbol, total.currency_code) }}</strong>
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Sin movimientos en este periodo.</p>
+      }
+    </section>
+  </div>
+
+  <div class="panel-grid dashboard__panels">
+    <section class="panel" aria-labelledby="expenses-title">
+      <header class="panel__header">
+        <h2 class="panel__title" id="expenses-title">Gastos por categoría</h2>
+      </header>
+      @if (expenses().length) {
+        <ul class="bar-list">
+          @for (item of expenses(); track (item.category_id ?? 'none') + item.currency_id) {
+            <li class="bar-list__item">
+              <div class="bar-list__head">
+                <span>{{ item.name ?? 'Sin categoría' }}</span>
+                <span class="muted">
+                  {{ money(item.total, item.symbol, item.currency_code) }}
+                </span>
+              </div>
+              <div class="bar-list__track">
+                <span
+                  class="bar-list__fill"
+                  [style.width.%]="barWidth(item.total)"
+                ></span>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">No hay gastos en este periodo.</p>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="recent-title">
+      <header class="panel__header">
+        <h2 class="panel__title" id="recent-title">Movimientos recientes</h2>
+      </header>
+      @if (recent().length) {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Cuenta</th>
+                <th scope="col" class="text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (movement of recent(); track movement.id) {
+                <tr>
+                  <td>{{ formatDate(movement.movement_date) }}</td>
+                  <td>
+                    <app-badge
+                      [label]="typeLabels[movement.type]"
+                      [tone]="movement.type === 'income' ? 'positive' : movement.type === 'expense' ? 'negative' : 'info'"
+                    />
+                  </td>
+                  <td>{{ movement.account?.name ?? '—' }}</td>
+                  <td class="text-right">
+                    {{ money(movement.amount, movement.currency?.symbol, movement.currency?.code) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="muted">Sin movimientos registrados.</p>
+      }
+    </section>
+  </div>
+
+  <section class="panel dashboard__trend" aria-labelledby="trend-title">
+    <header class="panel__header">
+      <div>
+        <h2 class="panel__title" id="trend-title">Tendencia de 6 meses</h2>
+        <p class="panel__subtitle">
+          Balance neto por moneda en cada periodo.
+        </p>
+      </div>
+    </header>
+    @if (trend()?.trend?.length) {
+      <ul class="trend">
+        @for (period of trend()!.trend; track period.year + '-' + period.month) {
+          <li class="trend__period">
+            <span class="trend__label">{{ monthLabel(period) }}</span>
+            @if (period.totals_by_currency.length) {
+              <ul class="trend__currencies">
+                @for (total of period.totals_by_currency; track total.currency_id) {
+                  <li class="trend__bar">
+                    <span class="trend__bar-track">
+                      <span
+                        class="trend__bar-fill"
+                        [class.trend__bar-fill--negative]="toNumber(total.net) < 0"
+                        [style.height.%]="trendBarHeight(total.net)"
+                      ></span>
+                    </span>
+                    <span class="trend__bar-label">
+                      {{ total.currency_code ?? 'N/D' }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <span class="muted trend__empty">Sin datos</span>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">Sin información de tendencia.</p>
+    }
+  </section>
+} @else if (!loading() && !error()) {
+  <app-empty-state
+    title="Sin datos todavía"
+    message="Registra tu primera cuenta y movimiento para ver el resumen."
+  />
+}

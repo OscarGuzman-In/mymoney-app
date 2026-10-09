@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.auth-card {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-card__header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.auth-card__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.auth-card__subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

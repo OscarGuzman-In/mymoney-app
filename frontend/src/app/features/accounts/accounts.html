@@ -1,0 +1,186 @@
+<app-page-header
+  eyebrow="Patrimonio"
+  title="Cuentas"
+  subtitle="Administra tus cuentas, billeteras y saldos por moneda."
+>
+  <button class="btn btn-primary" type="button" (click)="openCreate()">
+    Nueva cuenta
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (formOpen()) {
+  <section class="panel accounts__form" aria-labelledby="account-form-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="account-form-title">
+        {{ editingId() ? 'Editar cuenta' : 'Nueva cuenta' }}
+      </h2>
+    </header>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <p class="alert alert--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="name"
+            maxlength="100"
+            [attr.aria-invalid]="name.invalid && name.touched"
+          />
+          @if (name.invalid && name.touched) {
+            <p class="field__error">El nombre es obligatorio (máx. 100).</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Tipo</span>
+          <select class="field__select" formControlName="type">
+            @for (type of accountTypes; track type) {
+              <option [value]="type">{{ typeLabels[type] }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Moneda</span>
+          <select
+            class="field__select"
+            formControlName="currency_id"
+            [attr.aria-invalid]="currencyId.invalid && currencyId.touched"
+          >
+            <option value="">Selecciona una moneda</option>
+            @for (currency of currencies(); track currency.id) {
+              <option [value]="currency.id">
+                {{ currency.code }} · {{ currency.name }}
+              </option>
+            }
+          </select>
+          @if (editingId()) {
+            <p class="field__hint">La moneda no se puede cambiar.</p>
+          } @else if (currencyId.invalid && currencyId.touched) {
+            <p class="field__error">Selecciona una moneda.</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Descripción (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="description"
+            maxlength="500"
+          />
+        </label>
+      </div>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ editingId() ? 'Guardar cambios' : 'Crear cuenta' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando cuentas…</span>
+  </div>
+}
+
+@if (!loading() && accounts().length) {
+  <section class="panel" aria-label="Listado de cuentas">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Cuenta</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Moneda</th>
+            <th scope="col" class="text-right">Saldo</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of accounts(); track account.id) {
+            <tr>
+              <td>
+                <strong>{{ account.name }}</strong>
+                @if (account.description) {
+                  <span class="muted accounts__description">
+                    {{ account.description }}
+                  </span>
+                }
+              </td>
+              <td>{{ typeLabels[account.type] }}</td>
+              <td>{{ currencyOf(account)?.code ?? '—' }}</td>
+              <td class="text-right">
+                {{
+                  formatMoney(
+                    account.balance,
+                    currencyOf(account) ?? null
+                  )
+                }}
+              </td>
+              <td>
+                <app-badge
+                  [label]="account.is_active ? 'Activa' : 'Inactiva'"
+                  [tone]="account.is_active ? 'positive' : 'neutral'"
+                />
+              </td>
+              <td class="text-right">
+                <div class="inline-actions accounts__actions">
+                  <button
+                    class="btn btn-ghost"
+                    type="button"
+                    (click)="openEdit(account)"
+                  >
+                    Editar
+                  </button>
+                  @if (account.is_active) {
+                    <button
+                      class="btn btn-ghost"
+                      type="button"
+                      (click)="deactivate(account)"
+                    >
+                      Desactivar
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (!loading() && !accounts().length && !error()) {
+  <app-empty-state
+    title="Sin cuentas todavía"
+    message="Crea tu primera cuenta para empezar a registrar movimientos."
+  >
+    <button class="btn btn-primary" type="button" (click)="openCreate()">
+      Crear cuenta
+    </button>
+  </app-empty-state>
+}

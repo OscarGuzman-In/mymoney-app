@@ -1,0 +1,99 @@
+@use '../../../styles/mixins' as mix;
+
+.shell {
+  @include mix.container;
+  display: grid;
+  gap: var(--space-5);
+  padding-block: var(--space-6);
+  align-items: start;
+
+  @include mix.respond-to(1024px) {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+.shell__sidebar {
+  @include mix.card;
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  position: static;
+
+  @include mix.respond-to(1024px) {
+    position: sticky;
+    top: var(--space-5);
+  }
+}
+
+.shell__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shell__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  font-weight: var(--font-weight-bold);
+}
+
+.shell__identity-text {
+  display: grid;
+  min-width: 0;
+}
+
+.shell__identity-name {
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell__identity-email {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell__nav {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.shell__nav-link {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+
+  &:hover {
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+}
+
+.shell__nav-link--active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.shell__logout {
+  width: 100%;
+}
+
+.shell__content {
+  min-width: 0;
+}

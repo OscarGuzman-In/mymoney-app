@@ -1,0 +1,85 @@
+<section class="hero">
+  <div class="container hero__inner">
+    <p class="hero__eyebrow">Finanzas personales</p>
+    <h1 class="hero__title">
+      Controla tu dinero con una visión clara y ordenada.
+    </h1>
+    <p class="hero__subtitle">
+      MyMoney reúne tus cuentas, movimientos, presupuestos y metas en un solo
+      lugar, con totales separados por moneda.
+    </p>
+    <div class="hero__actions">
+      <a class="btn btn-primary" routerLink="/register">Crear cuenta</a>
+      <a class="btn btn-ghost" routerLink="/login">Iniciar sesión</a>
+    </div>
+  </div>
+</section>
+
+<section id="resumen" class="section" aria-labelledby="resumen-title">
+  <div class="container">
+    <header class="section__header">
+      <h2 id="resumen-title" class="section__title">Vista general</h2>
+      <p class="section__subtitle">
+        Esta es una muestra de la base visual. Los datos reales se conectarán en
+        el siguiente sprint.
+      </p>
+    </header>
+
+    <div class="stats-grid">
+      @for (stat of previewStats; track stat.label) {
+        <app-stat-card
+          [label]="stat.label"
+          [value]="stat.value"
+          [hint]="stat.hint"
+          [trend]="stat.trend"
+        />
+      }
+    </div>
+  </div>
+</section>
+
+<section
+  id="funciones"
+  class="section section--alt"
+  aria-labelledby="funciones-title"
+>
+  <div class="container">
+    <header class="section__header">
+      <h2 id="funciones-title" class="section__title">Funciones de MyMoney</h2>
+      <p class="section__subtitle">
+        Una base pensada para crecer con las siguientes etapas del producto.
+      </p>
+    </header>
+
+    <div class="features-grid">
+      @for (feature of features; track feature.title) {
+        <article class="feature">
+          <h3 class="feature__title">{{ feature.title }}</h3>
+          <p class="feature__description">{{ feature.description }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section
+  id="proximamente"
+  class="section"
+  aria-labelledby="proximamente-title"
+>
+  <div class="container">
+    <div class="upcoming">
+      <header class="section__header">
+        <h2 id="proximamente-title" class="section__title">Próximamente</h2>
+        <p class="section__subtitle">
+          Lo que se integrará en las próximas etapas.
+        </p>
+      </header>
+      <ul class="upcoming__list">
+        @for (item of upcoming; track item) {
+          <li class="upcoming__item">{{ item }}</li>
+        }
+      </ul>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,254 @@
+<app-page-header
+  eyebrow="Objetivos"
+  title="Metas de ahorro"
+  subtitle="Define objetivos y registra aportes hasta alcanzarlos."
+>
+  <button class="btn btn-primary" type="button" (click)="openCreate()">
+    Nueva meta
+  </button>
+</app-page-header>
+
+@if (error()) {
+  <p class="alert alert--error" role="alert">{{ error() }}</p>
+}
+
+@if (formOpen()) {
+  <section class="panel savings__form" aria-labelledby="goal-form-title">
+    <header class="panel__header">
+      <h2 class="panel__title" id="goal-form-title">
+        {{ editingId() ? 'Editar meta' : 'Nueva meta de ahorro' }}
+      </h2>
+    </header>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <p class="alert alert--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="name"
+            maxlength="100"
+            [attr.aria-invalid]="name.invalid && name.touched"
+          />
+          @if (name.invalid && name.touched) {
+            <p class="field__error">El nombre es obligatorio (máx. 100).</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Moneda</span>
+          <select
+            class="field__select"
+            formControlName="currency_id"
+            [attr.aria-invalid]="currencyId.invalid && currencyId.touched"
+          >
+            <option value="">Selecciona una moneda</option>
+            @for (currency of currencies(); track currency.id) {
+              <option [value]="currency.id">
+                {{ currency.code }} · {{ currency.name }}
+              </option>
+            }
+          </select>
+          @if (currencyId.invalid && currencyId.touched) {
+            <p class="field__error">Selecciona una moneda.</p>
+          }
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Monto objetivo</span>
+          <input
+            class="field__input"
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="target_amount"
+            [attr.aria-invalid]="targetAmount.invalid && targetAmount.touched"
+          />
+          @if (targetAmount.invalid && targetAmount.touched) {
+            <p class="field__error">Ingresa un monto mayor que cero.</p>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Fecha objetivo</span>
+          <input class="field__input" type="date" formControlName="target_date" />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="field">
+          <span class="field__label">Estado</span>
+          <select class="field__select" formControlName="status">
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Descripción (opcional)</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="description"
+            maxlength="500"
+          />
+        </label>
+      </div>
+
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ editingId() ? 'Guardar cambios' : 'Crear meta' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="cancel()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+@if (loading()) {
+  <div class="loading-row" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Cargando metas…</span>
+  </div>
+}
+
+@if (!loading() && goals().length) {
+  <div class="panel-grid">
+    @for (goal of goals(); track goal.id) {
+      <article class="panel goal-card">
+        <header class="goal-card__header">
+          <h2 class="goal-card__title">{{ goal.name }}</h2>
+          <app-badge
+            [label]="statusLabels[goal.status]"
+            [tone]="statusTone(goal.status)"
+          />
+        </header>
+
+        <p class="goal-card__amounts">
+          <strong>{{ formatMoney(goal.current_amount, currencyOf(goal) ?? null) }}</strong>
+          <span class="muted">
+            de {{ formatMoney(goal.target_amount, currencyOf(goal) ?? null) }}
+          </span>
+        </p>
+
+        <div
+          class="progress"
+          role="progressbar"
+          [attr.aria-valuenow]="progress(goal)"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span class="progress__fill" [style.width.%]="progress(goal)"></span>
+        </div>
+
+        <p class="muted goal-card__date">
+          Fecha objetivo: {{ formatDate(goal.target_date) }}
+        </p>
+
+        <footer class="inline-actions goal-card__footer">
+          <button
+            class="btn btn-ghost"
+            type="button"
+            (click)="toggleContributions(goal)"
+          >
+            {{ selectedGoalId() === goal.id ? 'Ocultar aportes' : 'Aportes' }}
+          </button>
+          <button class="btn btn-ghost" type="button" (click)="openEdit(goal)">
+            Editar
+          </button>
+          @if (goal.status !== 'completed') {
+            <button class="btn btn-ghost" type="button" (click)="complete(goal)">
+              Completar
+            </button>
+          }
+          @if (goal.is_active) {
+            <button
+              class="btn btn-ghost"
+              type="button"
+              (click)="deactivate(goal)"
+            >
+              Desactivar
+            </button>
+          }
+        </footer>
+
+        @if (selectedGoalId() === goal.id) {
+          <section class="goal-card__contributions" aria-label="Aportes de la meta">
+            <form
+              class="goal-card__contribution-form"
+              [formGroup]="contributionForm"
+              (ngSubmit)="addContribution()"
+              novalidate
+            >
+              @if (contributionError()) {
+                <p class="alert alert--error" role="alert">
+                  {{ contributionError() }}
+                </p>
+              }
+              <label class="field">
+                <span class="field__label">Monto del aporte</span>
+                <input
+                  class="field__input"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  formControlName="amount"
+                />
+              </label>
+              <label class="field">
+                <span class="field__label">Fecha</span>
+                <input
+                  class="field__input"
+                  type="date"
+                  formControlName="contribution_date"
+                />
+              </label>
+              <button class="btn btn-primary" type="submit" [disabled]="contributing()">
+                Añadir aporte
+              </button>
+            </form>
+
+            @if (contributions().length) {
+              <ul class="goal-card__contribution-list">
+                @for (item of contributions(); track item.id) {
+                  <li>
+                    <span>{{ formatDate(item.contribution_date) }}</span>
+                    <span>
+                      {{ formatMoney(item.amount, currencyOf(goal) ?? null) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="muted">Aún no hay aportes registrados.</p>
+            }
+          </section>
+        }
+      </article>
+    }
+  </div>
+}
+
+@if (!loading() && !goals().length && !error()) {
+  <app-empty-state
+    title="Sin metas de ahorro"
+    message="Crea una meta para empezar a ahorrar de forma planificada."
+  >
+    <button class="btn btn-primary" type="button" (click)="openCreate()">
+      Crear meta
+    </button>
+  </app-empty-state>
+}

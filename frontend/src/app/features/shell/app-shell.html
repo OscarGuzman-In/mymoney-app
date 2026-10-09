@@ -1,0 +1,35 @@
+<div class="shell">
+  <aside class="shell__sidebar" aria-label="Navegación del panel">
+    <div class="shell__identity">
+      <span class="shell__avatar" aria-hidden="true">
+        {{ (user()?.first_name || user()?.email || '?').charAt(0).toUpperCase() }}
+      </span>
+      <div class="shell__identity-text">
+        <span class="shell__identity-name">
+          {{ user()?.first_name || user()?.email }}
+        </span>
+        <span class="shell__identity-email">{{ user()?.email }}</span>
+      </div>
+    </div>
+
+    <nav class="shell__nav">
+      @for (item of navItems; track item.path) {
+        <a
+          class="shell__nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="shell__nav-link--active"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <button class="btn btn-ghost shell__logout" type="button" (click)="logout()">
+      Cerrar sesión
+    </button>
+  </aside>
+
+  <section class="shell__content">
+    <router-outlet />
+  </section>
+</div>

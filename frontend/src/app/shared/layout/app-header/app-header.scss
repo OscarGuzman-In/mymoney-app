@@ -1,0 +1,91 @@
+@use '../../../../styles/mixins' as mix;
+
+:host {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: block;
+}
+
+.app-header {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 68px;
+}
+
+.app-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.app-header__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: var(--font-size-lg);
+}
+
+.app-header__name {
+  font-size: var(--font-size-lg);
+  letter-spacing: -0.02em;
+}
+
+.app-header__nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-5);
+
+  @include mix.respond-to(768px) {
+    display: flex;
+  }
+}
+
+.app-header__link {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+
+  &:hover {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+}
+
+.app-header__cta {
+  padding-block: var(--space-2);
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.app-header__user {
+  display: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+
+  @include mix.respond-to(768px) {
+    display: inline;
+  }
+}
